@@ -1,0 +1,47 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# PyInstaller / Distribution
+dist/
+build/
+*.manifest
+*.spec.bak
+JAMJUM/
+
+# Virtual Environments
+venv/
+.venv/
+env/
+ENV/
+
+# Logs and Debug outputs
+*.log
+midi_debug.log
+live_midi.log
+
+# Temporary / Scratch / Diagnostic tools
+scratch/
+check_bt.py
+check_github.py
+debug_devices.py
+find_rgb_protocol.py
+inspect_chars.py
+live_sniffer.py
+monitor_all.py
+test_access.py
+test_bleak.py
+test_gui.py
+test_led_write.py
+test_winrt_midi.py
+test_write_single.py
+rgb_offsets.txt
+
+# OS / Editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace

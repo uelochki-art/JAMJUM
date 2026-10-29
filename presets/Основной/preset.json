@@ -1,0 +1,22 @@
+{
+  "name": "Основной",
+  "track_volume": 1.0,
+  "oneshot_volume": 1.0,
+  "volume_step": 0.05,
+  "oneshot_files": {
+    "0": "c:\\Users\\lazyf\\Music\\Gussy_DAW\\samples\\Kick.wav",
+    "1": "c:\\Users\\lazyf\\Music\\Gussy_DAW\\samples\\Snare.wav",
+    "2": "c:\\Users\\lazyf\\Music\\Gussy_DAW\\samples\\HiHat.wav",
+    "3": "c:\\Users\\lazyf\\Music\\Gussy_DAW\\samples\\Clap.wav",
+    "4": "c:\\Users\\lazyf\\Music\\Gussy_DAW\\samples\\Synth_C.wav",
+    "5": "c:\\Users\\lazyf\\Music\\Gussy_DAW\\samples\\Synth_E.wav",
+    "6": "c:\\Users\\lazyf\\Music\\Gussy_DAW\\samples\\Synth_G.wav",
+    "7": "c:\\Users\\lazyf\\Music\\Gussy_DAW\\samples\\Synth_B.wav"
+  },
+  "track_files": {
+    "0": "c:\\Users\\lazyf\\Music\\Gussy_DAW\\samples\\Backing_Track_120BPM.wav",
+    "3": "C:/Users/lazyf/Music/hypnodancer pitched.mp3",
+    "1": "C:/Users/lazyf/Music/bULKI.mp3",
+    "4": "C:/Users/lazyf/Music/ускорялка4новая.mp3"
+  }
+}
