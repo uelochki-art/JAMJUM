@@ -4,6 +4,10 @@
 
 Разработано специально для сценических выступлений, интерактивных шоу, диджеинга и ведущих (первично оптимизировано под компактный контроллер **M-Vave / Kuwee JP-MINI**, но легко адаптируется под любой контроллер: Akai, Novation, Arturia, Korg).
 
+<p align="center">
+  <img src="screenshot.png" alt="JAMJUM Pad Launcher Interface" width="850">
+</p>
+
 ---
 
 ## 🚀 Основные возможности
