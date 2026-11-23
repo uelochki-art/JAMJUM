@@ -1125,17 +1125,6 @@
       `;
       setTimeout(() => { if (box && box.parentElement) box.remove(); }, 9000);
     }
-        btStatusText.textContent = "Подключить JP-Mini";
-        updateActivity(`Ошибка: ${err.message || "Отменено"}`);
-      }
-    }
-
-    function onDisconnected() {
-      btBtn.classList.remove('connected');
-      btStatusText.textContent = "Подключить JP-Mini";
-      updateActivity("Bluetooth: Отключено");
-      midiCharacteristic = null;
-    }
 
     // Parser for Apple BLE MIDI standard packets
     function handleMidiPacket(event) {
