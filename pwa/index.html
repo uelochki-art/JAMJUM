@@ -1,0 +1,1256 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>JAMJUM Pad Launcher — Mobile PWA</title>
+  <meta name="theme-color" content="#0d1117">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/png" href="icon-192.png">
+
+  <style>
+    :root {
+      --bg: #0d1117;
+      --card-bg: #161b22;
+      --border: #30363d;
+      --cyan: #00ffff;
+      --pink: #ff007f;
+      --green: #00e676;
+      --red: #ff3366;
+      --yellow: #ffd600;
+      --text: #f0f6fc;
+      --text-muted: #8b949e;
+      --glow-cyan: 0 0 14px rgba(0, 255, 255, 0.45);
+      --glow-pink: 0 0 14px rgba(255, 0, 127, 0.45);
+      --glow-green: 0 0 14px rgba(0, 230, 118, 0.45);
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+      padding-bottom: 24px;
+    }
+
+    /* HEADER */
+    header {
+      background: #090d12;
+      border-bottom: 1px solid var(--border);
+      padding: 10px 14px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brand-title {
+      font-size: 1.1rem;
+      font-weight: 800;
+      letter-spacing: 1px;
+      color: var(--cyan);
+      text-shadow: var(--glow-cyan);
+    }
+
+    .brand-sub {
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .header-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .bt-btn {
+      background: rgba(0, 255, 255, 0.1);
+      border: 1px solid var(--cyan);
+      color: var(--cyan);
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: var(--glow-cyan);
+      transition: all 0.2s ease;
+    }
+
+    .bt-btn:active {
+      transform: scale(0.96);
+      background: rgba(0, 255, 255, 0.25);
+    }
+
+    .bt-btn.connected {
+      border-color: var(--green);
+      color: var(--green);
+      background: rgba(0, 230, 118, 0.12);
+      box-shadow: var(--glow-green);
+    }
+
+    .pill-activity {
+      font-size: 0.72rem;
+      padding: 4px 10px;
+      border-radius: 12px;
+      background: #21262d;
+      border: 1px solid var(--border);
+      color: #79c0ff;
+      font-family: monospace;
+      max-width: 180px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* PRESET TABS & HINTS */
+    .subbar {
+      padding: 8px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(22, 27, 34, 0.7);
+      border-bottom: 1px solid rgba(48, 54, 61, 0.6);
+      gap: 8px;
+    }
+
+    .preset-tabs {
+      display: flex;
+      gap: 6px;
+    }
+
+    .tab-btn {
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      border: 1px solid var(--border);
+      background: #21262d;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .tab-btn.active.oneshots {
+      border-color: var(--cyan);
+      color: #0d1117;
+      background: var(--cyan);
+      box-shadow: var(--glow-cyan);
+    }
+
+    .tab-btn.active.tracks {
+      border-color: var(--red);
+      color: #fff;
+      background: var(--red);
+      box-shadow: 0 0 14px rgba(255, 51, 102, 0.5);
+    }
+
+    .bank-badge {
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    /* PAD GRID */
+    .grid-container {
+      padding: 10px 14px;
+      flex: 1;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      grid-template-rows: repeat(4, 1fr);
+      gap: 8px;
+      min-height: 380px;
+    }
+
+    .pad {
+      background: var(--card-bg);
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 8px;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.08s ease, border-color 0.15s ease, background-color 0.15s ease;
+      touch-action: manipulation;
+    }
+
+    .pad:active, .pad.hit {
+      transform: scale(0.95);
+    }
+
+    /* Sound Pads in Preset 1 (One-Shots) */
+    .oneshots-mode .sound-pad {
+      border-color: rgba(0, 255, 255, 0.35);
+    }
+    .oneshots-mode .sound-pad.hit {
+      background: rgba(0, 255, 255, 0.3) !important;
+      border-color: var(--cyan) !important;
+      box-shadow: var(--glow-cyan);
+    }
+
+    /* Sound Pads in Preset 2 (Tracks) */
+    .tracks-mode .sound-pad {
+      border-color: rgba(255, 51, 102, 0.4);
+    }
+    .tracks-mode .sound-pad.playing {
+      border-color: var(--green) !important;
+      background: rgba(0, 230, 118, 0.18) !important;
+      box-shadow: var(--glow-green);
+    }
+    .tracks-mode .sound-pad.hit {
+      background: rgba(255, 51, 102, 0.35) !important;
+      border-color: var(--red) !important;
+    }
+
+    /* Control Pads (Right Column) */
+    .control-pad.track-vol {
+      border-color: rgba(0, 230, 118, 0.5);
+    }
+    .control-pad.track-vol.hit {
+      background: rgba(0, 230, 118, 0.3);
+      box-shadow: var(--glow-green);
+    }
+    .control-pad.oneshot-vol {
+      border-color: rgba(0, 255, 255, 0.5);
+    }
+    .control-pad.oneshot-vol.hit {
+      background: rgba(0, 255, 255, 0.3);
+      box-shadow: var(--glow-cyan);
+    }
+
+    .pad-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+    }
+
+    .pad-number {
+      font-size: 0.65rem;
+      font-weight: 800;
+      color: var(--text-muted);
+      letter-spacing: 0.5px;
+    }
+
+    .pad-badge {
+      font-size: 0.55rem;
+      padding: 1px 4px;
+      border-radius: 4px;
+      background: #21262d;
+      color: #8b949e;
+    }
+
+    .pad-title {
+      font-size: 0.75rem;
+      font-weight: 700;
+      margin: auto 0;
+      text-align: center;
+      word-break: break-word;
+      line-height: 1.15;
+    }
+
+    .control-pad .pad-title {
+      color: #fff;
+      font-size: 0.72rem;
+    }
+
+    .pad-action-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+    }
+
+    .pad-btn-upload {
+      font-size: 0.65rem;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 2px 4px;
+    }
+
+    .loop-indicator {
+      font-size: 0.6rem;
+      color: var(--yellow);
+      display: none;
+    }
+
+    .pad.looping .loop-indicator {
+      display: inline-block;
+    }
+
+    /* FOOTER CONTROLS */
+    .footer-bar {
+      padding: 10px 14px;
+      background: #090d12;
+      border-top: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .volume-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+    }
+
+    .vol-box {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .vol-label-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.7rem;
+      font-weight: 700;
+    }
+
+    .vol-label-track { color: var(--green); }
+    .vol-label-oneshot { color: var(--cyan); }
+
+    input[type=range] {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 6px;
+      border-radius: 3px;
+      background: #21262d;
+      outline: none;
+    }
+
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #fff;
+      cursor: pointer;
+    }
+
+    .transport-row {
+      display: flex;
+      gap: 8px;
+      justify-content: space-between;
+    }
+
+    .tr-btn {
+      flex: 1;
+      padding: 10px 6px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: #161b22;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--text);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      transition: all 0.15s ease;
+    }
+
+    .tr-btn:active {
+      transform: scale(0.96);
+    }
+
+    .tr-stop-oneshots {
+      border-color: var(--cyan);
+      color: var(--cyan);
+    }
+    .tr-track-play {
+      border-color: var(--green);
+      color: var(--green);
+    }
+    .tr-track-play.playing {
+      background: rgba(0, 230, 118, 0.2);
+      box-shadow: var(--glow-green);
+    }
+    .tr-mute {
+      border-color: var(--pink);
+      color: var(--pink);
+    }
+
+    /* HIDDEN FILE INPUT */
+    input[type="file"] {
+      display: none;
+    }
+  </style>
+</head>
+<body class="oneshots-mode">
+
+  <header>
+    <div class="brand">
+      <div class="brand-title">JAMJUM</div>
+      <div class="brand-sub">Mobile BLE MIDI</div>
+    </div>
+    <div class="header-controls">
+      <div class="pill-activity" id="activityPill">Готов к игре</div>
+      <button class="bt-btn" id="btConnectBtn">
+        <span>📡</span>
+        <span id="btStatusText">Подключить JP-Mini</span>
+      </button>
+    </div>
+  </header>
+
+  <div class="subbar">
+    <div class="preset-tabs">
+      <button class="tab-btn active oneshots" id="tabOneshots">🔵 Ваншоты</button>
+      <button class="tab-btn tracks" id="tabTracks">🔴 Треки</button>
+    </div>
+    <div class="bank-badge">
+      <span>PAD BANK:</span>
+      <span style="color:var(--cyan)">🔵 1</span>
+      <span style="color:var(--red)">🔴 2</span>
+      <span style="color:var(--green)">🟢 3</span>
+    </div>
+  </div>
+
+  <main class="grid-container" id="padGrid"></main>
+
+  <div class="footer-bar">
+    <div class="volume-row">
+      <div class="vol-box">
+        <div class="vol-label-row">
+          <span class="vol-label-track">Треки (Подложки)</span>
+          <span id="trackVolVal">100%</span>
+        </div>
+        <input type="range" id="trackVolSlider" min="0" max="150" value="100">
+      </div>
+      <div class="vol-box">
+        <div class="vol-label-row">
+          <span class="vol-label-oneshot">Ваншоты</span>
+          <span id="oneshotVolVal">100%</span>
+        </div>
+        <input type="range" id="oneshotVolSlider" min="0" max="150" value="100">
+      </div>
+    </div>
+
+    <div class="transport-row">
+      <button class="tr-btn tr-stop-oneshots" id="btnStopOneshots">⏹ Стоп ваншоты</button>
+      <button class="tr-btn tr-track-play" id="btnPlayPauseTrack">▶/⏸ Трек</button>
+      <button class="tr-btn tr-mute" id="btnMuteAll">🔇 Mute All</button>
+    </div>
+  </div>
+
+  <input type="file" id="filePicker" accept="audio/*">
+
+  <script>
+    // ==========================================
+    // 1. WEB AUDIO SYNTH & SAMPLE ENGINE
+    // ==========================================
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    let audioCtx = null;
+    let masterTrackGain = null;
+    let masterOneshotGain = null;
+
+    let trackVolume = 1.0;
+    let oneshotVolume = 1.0;
+
+    function initAudio() {
+      if (!audioCtx) {
+        audioCtx = new AudioContextClass();
+        masterTrackGain = audioCtx.createGain();
+        masterOneshotGain = audioCtx.createGain();
+
+        masterTrackGain.gain.value = trackVolume;
+        masterOneshotGain.gain.value = oneshotVolume;
+
+        masterTrackGain.connect(audioCtx.destination);
+        masterOneshotGain.connect(audioCtx.destination);
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    // Audio storage for custom uploaded buffers
+    const customBuffers = {
+      preset1: {},
+      preset2: {}
+    };
+
+    // Synthesized sound generators for instant out-of-the-box performance
+    function playSynthesizedSound(slotIdx, isTrack = false) {
+      initAudio();
+      const now = audioCtx.currentTime;
+      const targetGain = isTrack ? masterTrackGain : masterOneshotGain;
+
+      if (!isTrack) {
+        // ONE-SHOTS: High quality 808 & FX Synthesis
+        switch(slotIdx) {
+          case 0: // Kick
+            {
+              const osc = audioCtx.createOscillator();
+              const g = audioCtx.createGain();
+              osc.frequency.setValueAtTime(140, now);
+              osc.frequency.exponentialRampToValueAtTime(38, now + 0.12);
+              g.gain.setValueAtTime(1.0, now);
+              g.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+              osc.connect(g);
+              g.connect(targetGain);
+              osc.start(now);
+              osc.stop(now + 0.35);
+            }
+            break;
+          case 1: // Snare
+            {
+              const osc = audioCtx.createOscillator();
+              const oscGain = audioCtx.createGain();
+              osc.frequency.setValueAtTime(220, now);
+              osc.frequency.exponentialRampToValueAtTime(80, now + 0.1);
+              oscGain.gain.setValueAtTime(0.7, now);
+              oscGain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+              osc.connect(oscGain);
+              oscGain.connect(targetGain);
+              osc.start(now);
+              osc.stop(now + 0.15);
+
+              // Noise burst
+              const bufferSize = audioCtx.sampleRate * 0.18;
+              const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+              const data = buffer.getChannelData(0);
+              for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+              const noise = audioCtx.createBufferSource();
+              noise.buffer = buffer;
+              const noiseGain = audioCtx.createGain();
+              noiseGain.gain.setValueAtTime(0.8, now);
+              noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+              noise.connect(noiseGain);
+              noiseGain.connect(targetGain);
+              noise.start(now);
+            }
+            break;
+          case 2: // HiHat
+            {
+              const bufferSize = audioCtx.sampleRate * 0.05;
+              const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+              const data = buffer.getChannelData(0);
+              for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+              const noise = audioCtx.createBufferSource();
+              noise.buffer = buffer;
+              const filter = audioCtx.createBiquadFilter();
+              filter.type = 'highpass';
+              filter.frequency.value = 7500;
+              const g = audioCtx.createGain();
+              g.gain.setValueAtTime(0.6, now);
+              g.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+              noise.connect(filter);
+              filter.connect(g);
+              g.connect(targetGain);
+              noise.start(now);
+            }
+            break;
+          case 3: // Clap
+            {
+              for (let delay of [0, 0.012, 0.024]) {
+                const bufferSize = audioCtx.sampleRate * 0.08;
+                const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+                const noise = audioCtx.createBufferSource();
+                noise.buffer = buffer;
+                const g = audioCtx.createGain();
+                g.gain.setValueAtTime(0.6, now + delay);
+                g.gain.exponentialRampToValueAtTime(0.001, now + delay + 0.08);
+                noise.connect(g);
+                g.connect(targetGain);
+                noise.start(now + delay);
+              }
+            }
+            break;
+          case 4: case 5: case 6: case 7: // Synth chords & melodic notes
+            {
+              const freqs = [261.63, 329.63, 392.00, 493.88]; // C4, E4, G4, B4
+              const osc = audioCtx.createOscillator();
+              const g = audioCtx.createGain();
+              osc.type = 'sawtooth';
+              osc.frequency.value = freqs[slotIdx - 4];
+              g.gain.setValueAtTime(0.4, now);
+              g.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+              osc.connect(g);
+              g.connect(targetGain);
+              osc.start(now);
+              osc.stop(now + 0.6);
+            }
+            break;
+          default: // FX / Percussion
+            {
+              const osc = audioCtx.createOscillator();
+              const g = audioCtx.createGain();
+              osc.type = 'triangle';
+              osc.frequency.setValueAtTime(400 + slotIdx * 60, now);
+              osc.frequency.exponentialRampToValueAtTime(120, now + 0.3);
+              g.gain.setValueAtTime(0.5, now);
+              g.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+              osc.connect(g);
+              g.connect(targetGain);
+              osc.start(now);
+              osc.stop(now + 0.3);
+            }
+        }
+      } else {
+        // BACKING TRACKS / LOOPS (Synthesized groove loop)
+        playSynthesizedGrooveTrack(slotIdx);
+      }
+    }
+
+    // Active playing backing track source
+    let currentTrackSource = null;
+    let isTrackPlaying = false;
+    let currentTrackPadIdx = null;
+
+    function playSynthesizedGrooveTrack(slotIdx) {
+      stopCurrentTrack();
+      initAudio();
+
+      // Create a 4-bar backing loop buffer
+      const bpm = 120 + slotIdx * 5;
+      const beatLen = 60 / bpm;
+      const loopLen = beatLen * 8; // 2 bars
+      const numSamples = Math.floor(audioCtx.sampleRate * loopLen);
+      const buffer = audioCtx.createBuffer(2, numSamples, audioCtx.sampleRate);
+      const left = buffer.getChannelData(0);
+      const right = buffer.getChannelData(1);
+
+      // Generate a warm backing groove
+      for (let i = 0; i < numSamples; i++) {
+        const t = i / audioCtx.sampleRate;
+        const beatPos = (t % beatLen) / beatLen;
+        // Kick on beat
+        let kick = 0;
+        if (beatPos < 0.2) kick = Math.sin(2 * Math.PI * 55 * (1 - beatPos * 4) * beatPos) * (1 - beatPos * 5);
+        // Bass groove
+        const bassFreq = 65.41; // C2
+        const bass = Math.sin(2 * Math.PI * bassFreq * t) * 0.25;
+        // Hi-hat 16ths
+        const subBeat = (t % (beatLen / 2)) / (beatLen / 2);
+        const hat = (Math.random() * 2 - 1) * Math.max(0, 1 - subBeat * 14) * 0.08;
+
+        const sample = (kick * 0.45 + bass + hat) * 0.7;
+        left[i] = sample;
+        right[i] = sample;
+      }
+
+      currentTrackSource = audioCtx.createBufferSource();
+      currentTrackSource.buffer = buffer;
+      currentTrackSource.loop = true;
+      currentTrackSource.connect(masterTrackGain);
+      currentTrackSource.start();
+
+      isTrackPlaying = true;
+      currentTrackPadIdx = SOUND_PADS_ORDER[slotIdx];
+      updateTransportUI();
+    }
+
+    function stopCurrentTrack() {
+      if (currentTrackSource) {
+        try { currentTrackSource.stop(); } catch(e) {}
+        currentTrackSource = null;
+      }
+      isTrackPlaying = false;
+      currentTrackPadIdx = null;
+      updateTransportUI();
+    }
+
+    // ==========================================
+    // 2. PAD DEFINITIONS & GRID RENDERING
+    // ==========================================
+    const SOUND_PADS_ORDER = [0, 1, 2, 4, 5, 6, 8, 9, 10, 12, 13, 14];
+    const PAD_TO_SLOT = {};
+    SOUND_PADS_ORDER.forEach((padIdx, slotIdx) => { PAD_TO_SLOT[padIdx] = slotIdx; });
+
+    const DEFAULT_TITLES_PRESET1 = [
+      "Kick", "Snare", "HiHat",
+      "Clap", "Synth C", "Synth E",
+      "Synth G", "Synth B", "Sub Drop",
+      "808 Bass", "FX Riser", "Vocal One"
+    ];
+
+    const DEFAULT_TITLES_PRESET2 = [
+      "Groove 120", "House 125", "Funk 115",
+      "Lo-Fi 85", "Trap 140", "Electro 128",
+      "Chill 95", "Deep 122", "Disco 118",
+      "Reggae 80", "Rock Beat", "Synthwave"
+    ];
+
+    const CONTROL_PADS = {
+      15: { title: "ТРЕКИ VOL + (+5%)", action: "track_vol_up", cls: "track-vol" },
+      11: { title: "ТРЕКИ VOL - (-5%)", action: "track_vol_down", cls: "track-vol" },
+      7:  { title: "ВАНШОТ VOL + (+5%)", action: "oneshot_vol_up", cls: "oneshot-vol" },
+      3:  { title: "ВАНШОТ VOL - (-5%)", action: "oneshot_vol_down", cls: "oneshot-vol" }
+    };
+
+    let activePreset = 'preset1'; // 'preset1' = One-Shots, 'preset2' = Tracks
+
+    const padGrid = document.getElementById('padGrid');
+
+    function renderGrid() {
+      padGrid.innerHTML = '';
+      // Render 4 rows (Row 0: 12..15, Row 1: 8..11, Row 2: 4..7, Row 3: 0..3)
+      const rows = [
+        [12, 13, 14, 15],
+        [8, 9, 10, 11],
+        [4, 5, 6, 7],
+        [0, 1, 2, 3]
+      ];
+
+      rows.forEach(row => {
+        row.forEach(padIdx => {
+          const padEl = document.createElement('div');
+          padEl.className = 'pad';
+          padEl.id = `pad-${padIdx}`;
+
+          if (padIdx in CONTROL_PADS) {
+            const ctrl = CONTROL_PADS[padIdx];
+            padEl.classList.add('control-pad', ctrl.cls);
+            padEl.innerHTML = `
+              <div class="pad-header">
+                <span class="pad-number">PAD ${padIdx + 1}</span>
+                <span class="pad-badge">CTRL</span>
+              </div>
+              <div class="pad-title">${ctrl.title}</div>
+              <div class="pad-action-row"></div>
+            `;
+            padEl.addEventListener('pointerdown', (e) => {
+              e.preventDefault();
+              handleControl(ctrl.action, padIdx);
+            });
+          } else {
+            padEl.classList.add('sound-pad');
+            const slotIdx = PAD_TO_SLOT[padIdx];
+            const titles = (activePreset === 'preset1') ? DEFAULT_TITLES_PRESET1 : DEFAULT_TITLES_PRESET2;
+            const title = titles[slotIdx] || `Слот ${slotIdx + 1}`;
+
+            padEl.innerHTML = `
+              <div class="pad-header">
+                <span class="pad-number">PAD ${padIdx + 1}</span>
+                <span class="loop-indicator">🔁</span>
+                <button class="pad-btn-upload" title="Загрузить аудио" data-slot="${slotIdx}">📁</button>
+              </div>
+              <div class="pad-title" id="pad-title-${padIdx}">${title}</div>
+              <div class="pad-action-row">
+                <span class="pad-badge">${activePreset === 'preset1' ? 'ONE-SHOT' : 'TRACK'}</span>
+              </div>
+            `;
+
+            padEl.addEventListener('pointerdown', (e) => {
+              // Ignore if clicked on the upload button
+              if (e.target.classList.contains('pad-btn-upload')) return;
+              e.preventDefault();
+              triggerPad(padIdx, 100);
+            });
+
+            // Upload button handler
+            const upBtn = padEl.querySelector('.pad-btn-upload');
+            upBtn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              openFilePickerForSlot(slotIdx);
+            });
+          }
+
+          padGrid.appendChild(padEl);
+        });
+      });
+      updateTransportUI();
+    }
+
+    // ==========================================
+    // 3. TRIGGERING & CONTROLS
+    // ==========================================
+    function triggerPad(padIdx, velocity = 100) {
+      flashPadVisual(padIdx);
+
+      if (padIdx in CONTROL_PADS) {
+        handleControl(CONTROL_PADS[padIdx].action, padIdx);
+        return;
+      }
+
+      const slotIdx = PAD_TO_SLOT[padIdx];
+      if (slotIdx === undefined) return;
+
+      const isTrack = (activePreset === 'preset2');
+      const tag = isTrack ? "🔴 Трек" : "🔵 Ваншот";
+      updateActivity(`${tag}: PAD ${padIdx + 1} (Vel ${velocity})`);
+
+      // Check if custom uploaded buffer exists
+      const customBuf = customBuffers[activePreset][slotIdx];
+      if (customBuf) {
+        playCustomBuffer(customBuf, isTrack, padIdx);
+      } else {
+        playSynthesizedSound(slotIdx, isTrack);
+      }
+    }
+
+    function playCustomBuffer(buffer, isTrack, padIdx) {
+      initAudio();
+      if (isTrack) {
+        stopCurrentTrack();
+        currentTrackSource = audioCtx.createBufferSource();
+        currentTrackSource.buffer = buffer;
+        currentTrackSource.loop = true;
+        currentTrackSource.connect(masterTrackGain);
+        currentTrackSource.start();
+        isTrackPlaying = true;
+        currentTrackPadIdx = padIdx;
+        updateTransportUI();
+      } else {
+        const src = audioCtx.createBufferSource();
+        src.buffer = buffer;
+        src.connect(masterOneshotGain);
+        src.start();
+      }
+    }
+
+    function flashPadVisual(padIdx) {
+      const el = document.getElementById(`pad-${padIdx}`);
+      if (!el) return;
+      el.classList.add('hit');
+      setTimeout(() => el.classList.remove('hit'), 150);
+    }
+
+    function handleControl(action, padIdx = null) {
+      if (padIdx !== null) flashPadVisual(padIdx);
+      switch(action) {
+        case 'track_vol_up':
+          setTrackVolume(Math.min(1.5, trackVolume + 0.05));
+          updateActivity("🔊 Треки +5%");
+          break;
+        case 'track_vol_down':
+          setTrackVolume(Math.max(0.0, trackVolume - 0.05));
+          updateActivity("🔉 Треки -5%");
+          break;
+        case 'oneshot_vol_up':
+          setOneshotVolume(Math.min(1.5, oneshotVolume + 0.05));
+          updateActivity("🔊 Ваншоты +5%");
+          break;
+        case 'oneshot_vol_down':
+          setOneshotVolume(Math.max(0.0, oneshotVolume - 0.05));
+          updateActivity("🔉 Ваншоты -5%");
+          break;
+        case 'track_play_pause':
+          toggleTrackPlayPause();
+          break;
+        case 'stop_oneshots':
+          initAudio();
+          // Stop oneshots by briefly disconnecting and reconnecting oneshot gain
+          masterOneshotGain.disconnect();
+          masterOneshotGain = audioCtx.createGain();
+          masterOneshotGain.gain.value = oneshotVolume;
+          masterOneshotGain.connect(audioCtx.destination);
+          updateActivity("⏹ Стоп все ваншоты");
+          break;
+        case 'toggle_preset':
+          setActivePreset(activePreset === 'preset1' ? 'preset2' : 'preset1');
+          break;
+      }
+    }
+
+    function toggleTrackPlayPause() {
+      if (isTrackPlaying) {
+        stopCurrentTrack();
+        updateActivity("⏸ Трек остановлен");
+      } else {
+        // Start track slot 0
+        triggerPad(0, 100);
+      }
+    }
+
+    function updateTransportUI() {
+      const btn = document.getElementById('btnPlayPauseTrack');
+      if (isTrackPlaying) {
+        btn.classList.add('playing');
+        btn.innerHTML = "⏸ Пауза трека";
+      } else {
+        btn.classList.remove('playing');
+        btn.innerHTML = "▶/⏸ Трек";
+      }
+
+      // Update playing pad indicator
+      document.querySelectorAll('.sound-pad').forEach(p => p.classList.remove('playing'));
+      if (isTrackPlaying && currentTrackPadIdx !== null) {
+        const p = document.getElementById(`pad-${currentTrackPadIdx}`);
+        if (p) p.classList.add('playing');
+      }
+    }
+
+    function setActivePreset(preset) {
+      if (activePreset === preset) return;
+      activePreset = preset;
+      document.body.className = (activePreset === 'preset1') ? 'oneshots-mode' : 'tracks-mode';
+
+      document.getElementById('tabOneshots').className = `tab-btn oneshots ${activePreset === 'preset1' ? 'active' : ''}`;
+      document.getElementById('tabTracks').className = `tab-btn tracks ${activePreset === 'preset2' ? 'active' : ''}`;
+
+      updateActivity(activePreset === 'preset1' ? "🔵 Пресет 1: Ваншоты" : "🔴 Пресет 2: Треки");
+      renderGrid();
+    }
+
+    document.getElementById('tabOneshots').addEventListener('click', () => setActivePreset('preset1'));
+    document.getElementById('tabTracks').addEventListener('click', () => setActivePreset('preset2'));
+
+    // Volume sliders
+    const trackVolSlider = document.getElementById('trackVolSlider');
+    const oneshotVolSlider = document.getElementById('oneshotVolSlider');
+
+    function setTrackVolume(val) {
+      trackVolume = val;
+      if (masterTrackGain) masterTrackGain.gain.value = val;
+      trackVolSlider.value = Math.round(val * 100);
+      document.getElementById('trackVolVal').textContent = `${Math.round(val * 100)}%`;
+    }
+
+    function setOneshotVolume(val) {
+      oneshotVolume = val;
+      if (masterOneshotGain) masterOneshotGain.gain.value = val;
+      oneshotVolSlider.value = Math.round(val * 100);
+      document.getElementById('oneshotVolVal').textContent = `${Math.round(val * 100)}%`;
+    }
+
+    trackVolSlider.addEventListener('input', (e) => setTrackVolume(e.target.value / 100));
+    oneshotVolSlider.addEventListener('input', (e) => setOneshotVolume(e.target.value / 100));
+
+    document.getElementById('btnStopOneshots').addEventListener('click', () => handleControl('stop_oneshots'));
+    document.getElementById('btnPlayPauseTrack').addEventListener('click', () => handleControl('track_play_pause'));
+    document.getElementById('btnMuteAll').addEventListener('click', () => {
+      stopCurrentTrack();
+      handleControl('stop_oneshots');
+      updateActivity("🔇 Все звуки заглушены");
+    });
+
+    function updateActivity(text) {
+      const p = document.getElementById('activityPill');
+      p.textContent = text;
+    }
+
+    // Custom sound file upload
+    let uploadTargetSlot = null;
+    const filePicker = document.getElementById('filePicker');
+    function openFilePickerForSlot(slotIdx) {
+      initAudio();
+      uploadTargetSlot = slotIdx;
+      filePicker.click();
+    }
+
+    filePicker.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file || uploadTargetSlot === null) return;
+      const arrayBuf = await file.arrayBuffer();
+      const decoded = await audioCtx.decodeAudioData(arrayBuf);
+      customBuffers[activePreset][uploadTargetSlot] = decoded;
+      const padIdx = SOUND_PADS_ORDER[uploadTargetSlot];
+      const titleEl = document.getElementById(`pad-title-${padIdx}`);
+      if (titleEl) titleEl.textContent = file.name.replace(/\.[^/.]+$/, "");
+      updateActivity(`✓ Загружен: ${file.name}`);
+      filePicker.value = '';
+    });
+
+    // ==========================================
+    // 4. NATIVE WEB BLUETOOTH BLE MIDI CLIENT
+    // ==========================================
+    const BLE_MIDI_SERVICE_UUID = '03b80e5a-ede8-4b33-a028-51004cd7324d';
+    const BLE_MIDI_CHAR_UUID    = '7772e5db-3868-4112-a1a9-f2669d106bf3';
+
+    let bluetoothDevice = null;
+    let midiCharacteristic = null;
+
+    const btBtn = document.getElementById('btConnectBtn');
+    const btStatusText = document.getElementById('btStatusText');
+
+    btBtn.addEventListener('click', async () => {
+      initAudio();
+      if (bluetoothDevice && bluetoothDevice.gatt.connected) {
+        bluetoothDevice.gatt.disconnect();
+        return;
+      }
+      await connectBleMidi();
+    });
+
+    async function connectBleMidi() {
+      try {
+        if (!navigator.bluetooth) {
+          throw new Error("Web Bluetooth не поддерживается этим браузером. Откройте в Google Chrome на Android.");
+        }
+
+        updateActivity("Поиск устройства Bluetooth...");
+        btStatusText.textContent = "Поиск...";
+
+        // Request device with both namePrefix and service filter
+        bluetoothDevice = await navigator.bluetooth.requestDevice({
+          filters: [
+            { services: [BLE_MIDI_SERVICE_UUID] },
+            { namePrefix: 'JP' },
+            { namePrefix: 'M-Vave' },
+            { namePrefix: 'SMC' }
+          ],
+          optionalServices: [BLE_MIDI_SERVICE_UUID]
+        });
+
+        bluetoothDevice.addEventListener('gattserverdisconnected', onDisconnected);
+
+        updateActivity(`Подключение к ${bluetoothDevice.name}...`);
+        btStatusText.textContent = "Подключение...";
+
+        const server = await bluetoothDevice.gatt.connect();
+
+        // Retrieve primary MIDI service
+        let service = null;
+        try {
+          service = await server.getPrimaryService(BLE_MIDI_SERVICE_UUID);
+        } catch(sErr) {
+          console.warn("Direct service lookup failed, listing services:", sErr);
+          const services = await server.getPrimaryServices();
+          for (let s of services) {
+            if (s.uuid.toLowerCase().includes("03b80e5a")) {
+              service = s;
+              break;
+            }
+          }
+          if (!service && services.length > 0) service = services[0];
+        }
+
+        if (!service) {
+          throw new Error("MIDI-сервис не найден на устройстве.");
+        }
+
+        // Retrieve MIDI characteristic
+        midiCharacteristic = await service.getCharacteristic(BLE_MIDI_CHAR_UUID);
+        await midiCharacteristic.startNotifications();
+        midiCharacteristic.addEventListener('characteristicvaluechanged', handleMidiPacket);
+
+        btBtn.classList.add('connected');
+        btStatusText.textContent = `● ${bluetoothDevice.name}`;
+        updateActivity(`✓ Подключено: ${bluetoothDevice.name}`);
+        showNotification(`✓ Контроллер ${bluetoothDevice.name} успешно подключен!`, 'success');
+
+      } catch (err) {
+        console.warn("Bluetooth Connection Failed / Cancelled:", err);
+        btBtn.classList.remove('connected');
+        btStatusText.textContent = "Подключить JP-Mini";
+
+        let errorMsg = err.message || "Ошибка подключения";
+        let tip = "";
+
+        if (err.name === 'NetworkError' || (err.message && err.message.toLowerCase().includes('connection failed'))) {
+          tip = "Контроллер занят! Отключите Bluetooth на компьютере и перезагрузите тумблер на JP-Mini (контроллер может держать только 1 соединение).";
+        } else if (err.name === 'SecurityError') {
+          tip = "Браузер заблокировал Bluetooth из-за самоподписанного сертификата. Разверните сайт онлайн на GitHub Pages или Vercel с доверенным HTTPS!";
+        } else if (err.name === 'NotFoundError') {
+          tip = "Устройство не выбрано или отменено.";
+        }
+
+        updateActivity(`Ошибка: ${errorMsg}`);
+        showNotification(`⚠️ ${errorMsg}<br><small style="color:#ffd600">${tip}</small>`, 'error');
+      }
+    }
+
+    function onDisconnected() {
+      btBtn.classList.remove('connected');
+      btStatusText.textContent = "Подключить JP-Mini";
+      updateActivity("Bluetooth: Отключено");
+      showNotification("Bluetooth соединение разорвано", 'warning');
+      midiCharacteristic = null;
+    }
+
+    function showNotification(html, type = 'info') {
+      let box = document.getElementById('notifBox');
+      if (!box) {
+        box = document.createElement('div');
+        box.id = 'notifBox';
+        box.style.cssText = `
+          position: fixed;
+          bottom: 75px;
+          left: 14px;
+          right: 14px;
+          background: #161b22;
+          border: 1.5px solid #30363d;
+          border-radius: 10px;
+          padding: 12px 14px;
+          font-size: 0.8rem;
+          line-height: 1.35;
+          z-index: 1000;
+          box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 10px;
+          transition: all 0.3s ease;
+        `;
+        document.body.appendChild(box);
+      }
+      const borderCol = (type === 'error') ? '#ff3366' : ((type === 'success') ? '#00e676' : '#ffd600');
+      box.style.borderColor = borderCol;
+      box.innerHTML = `
+        <div>${html}</div>
+        <button onclick="this.parentElement.remove()" style="background:none;border:none;color:#8b949e;font-size:1.1rem;cursor:pointer;">✕</button>
+      `;
+      setTimeout(() => { if (box && box.parentElement) box.remove(); }, 9000);
+    }
+        btStatusText.textContent = "Подключить JP-Mini";
+        updateActivity(`Ошибка: ${err.message || "Отменено"}`);
+      }
+    }
+
+    function onDisconnected() {
+      btBtn.classList.remove('connected');
+      btStatusText.textContent = "Подключить JP-Mini";
+      updateActivity("Bluetooth: Отключено");
+      midiCharacteristic = null;
+    }
+
+    // Parser for Apple BLE MIDI standard packets
+    function handleMidiPacket(event) {
+      const dataView = event.target.value;
+      const len = dataView.byteLength;
+      if (len < 2) return;
+
+      const bytes = [];
+      for (let i = 0; i < len; i++) bytes.push(dataView.getUint8(i));
+
+      let i = 1;
+      let lastStatus = null;
+
+      while (i < len) {
+        let b = bytes[i];
+
+        // Skip BLE MIDI timestamp bytes
+        if ((b & 0x80) && (i + 1 < len) && (bytes[i + 1] >= 0x80)) {
+          i++;
+          b = bytes[i];
+        }
+
+        // Real-Time messages
+        if (b === 0xFA || b === 0xFB) {
+          handleControl('track_play_pause');
+          i++;
+          continue;
+        } else if (b === 0xFC) {
+          handleControl('stop_oneshots');
+          i++;
+          continue;
+        }
+
+        if (b >= 0x80 && b <= 0xF7) {
+          lastStatus = b;
+          i++;
+        } else if (lastStatus !== null) {
+          // Running status
+        } else {
+          i++;
+          continue;
+        }
+
+        if (lastStatus === null) break;
+        const msgType = lastStatus & 0xF0;
+
+        if (msgType === 0x90) { // Note On
+          if (i + 1 < len) {
+            const note = bytes[i];
+            const vel = bytes[i + 1];
+            i += 2;
+            if (vel > 0) {
+              dispatchHardwareNote(note, vel);
+            }
+          } else break;
+        } else if (msgType === 0x80) { // Note Off
+          if (i + 1 < len) { i += 2; } else break;
+        } else if (msgType === 0xB0) { // Control Change
+          if (i + 1 < len) {
+            const cc = bytes[i];
+            const val = bytes[i + 1];
+            i += 2;
+            if (val > 0) {
+              if (cc === 22 || cc === 115 || cc === 117 || cc === 94) handleControl('track_play_pause');
+              else if (cc === 23 || cc === 114 || cc === 116 || cc === 93) handleControl('stop_oneshots');
+              else if (cc === 24 || cc === 118 || cc === 119 || cc === 95) handleControl('toggle_preset');
+            }
+          } else break;
+        } else {
+          i++;
+        }
+      }
+    }
+
+    // Hardware Bank Routing (Bank 1 = One-shots, Bank 2 = Tracks, Bank 3 = Green Empty)
+    function dispatchHardwareNote(note, velocity) {
+      // 1. Bank 1: Blue / Cyan (notes 36..51) -> PRESET 1: ONE-SHOTS
+      if (note >= 36 && note <= 51) {
+        if (activePreset !== 'preset1') setActivePreset('preset1');
+        const padIdx = note - 36;
+        triggerPad(padIdx, velocity);
+      }
+      // 2. Bank 2: Red (notes 52..67) -> PRESET 2: TRACKS
+      else if (note >= 52 && note <= 67) {
+        if (activePreset !== 'preset2') setActivePreset('preset2');
+        const padIdx = note - 52;
+        triggerPad(padIdx, velocity);
+      }
+      // 3. Bank 3: Green (notes 68..83) -> Резерв / Пустой
+      else if (note >= 68 && note <= 83) {
+        const hwNum = note - 68 + 1;
+        updateActivity(`🟢 Зелёный банк: PAD ${hwNum} (Пустой)`);
+      }
+      // 4. Low octaves fallback
+      else if (note >= 0 && note <= 15) {
+        triggerPad(note, velocity);
+      }
+      else {
+        updateActivity(`Нота ${note} (не назначена)`);
+      }
+    }
+
+    // ==========================================
+    // 5. SERVICE WORKER REGISTRATION (OFFLINE PWA)
+    // ==========================================
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(err => {
+          console.log('SW registration error:', err);
+        });
+      });
+    }
+
+    // Initial render
+    renderGrid();
+  </script>
+</body>
+</html>

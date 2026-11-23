@@ -673,14 +673,6 @@ class MidiListener(QObject):
         if msg_type == 0x90:
             note = d1
             velocity = d2
-            # Hardware LED Feedback
-            if velocity > 0:
-                self.ble_receiver.send_led_feedback(status, note, 127)
-            else:
-                pad_idx = self.pad_map.get(note, 0)
-                col = self._get_pad_default_color(pad_idx)
-                self.ble_receiver.send_led_feedback(0x90 | (status & 0x0F), note, col)
-
             if velocity == 0:
                 return
 
@@ -696,10 +688,7 @@ class MidiListener(QObject):
             self._dispatch_note_press(note, velocity)
 
         elif msg_type == 0x80:
-            note = d1
-            pad_idx = self.pad_map.get(note, 0)
-            col = self._get_pad_default_color(pad_idx)
-            self.ble_receiver.send_led_feedback(0x90 | (status & 0x0F), note, col)
+            pass
 
     def _handle_mido_message(self, msg: mido.Message):
         debug_log(f"[USB RAW] {msg}")
@@ -823,23 +812,11 @@ class MidiListener(QObject):
         self.set_active_preset(new_preset)
 
     def update_hardware_leds(self):
-        debug_log(f"[UPDATE HARDWARE LEDS] active_preset={self.active_preset}")
-        msgs = []
-        # 1. Program Change to sync hardware bank
-        prog = 0 if self.active_preset == 'preset1' else 1
-        msgs.append([0xC9, prog])
-        msgs.append([0xC0, prog])
-
-        # 2. Update colors on Bank 1 (36..51) and Bank 2 (52..67)
-        for bank_base in (36, 52):
-            for i in range(16):
-                note = bank_base + i
-                pad_idx = i
-                col = self._get_pad_default_color(pad_idx)
-                msgs.append([0x99, note, col])
-                msgs.append([0x90, note, col])
-
-        self.ble_receiver.send_midi_sequence(msgs)
+        # On M-Vave / Kuwee JP-MINI, hardware LEDs and bank colors (Bank 1 Cyan, Bank 2 Red, Bank 3 Green)
+        # are managed autonomously by the controller's internal firmware.
+        # Sending external Program Change or unmapped Note-On velocity commands overrides
+        # the internal state and extinguishes the LEDs. We preserve native hardware lighting.
+        debug_log(f"[UPDATE HARDWARE LEDS] Native hardware lighting retained for {self.active_preset}")
 
     def _get_pad_default_color(self, pad_idx: int) -> int:
         if pad_idx in (15, 11):      # Track Volume UP / DOWN
